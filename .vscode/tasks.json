@@ -1,0 +1,82 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Detect (dry run)",
+      "type": "shell",
+      "command": "/usr/bin/python3",
+      "args": ["scripts/file_ingest.py", "--test"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ingest (copy)",
+      "type": "shell",
+      "command": "/usr/bin/python3",
+      "args": [
+        "scripts/file_ingest.py",
+        "--project-name", "${input:projectName}",
+        "--dest", "${input:destRoot}"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ingest (move)",
+      "type": "shell",
+      "command": "/usr/bin/python3",
+      "args": [
+        "scripts/file_ingest.py",
+        "--mode", "move",
+        "--project-name", "${input:projectName}",
+        "--dest", "${input:destRoot}"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Launch GUI (system Python)",
+      "type": "shell",
+      "command": "/usr/bin/python3",
+      "args": ["scripts/ingest_gui.py"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Launch GUI (Homebrew Python)",
+      "type": "shell",
+      "command": "/opt/homebrew/bin/python3",
+      "args": ["scripts/ingest_gui.py"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tail logs",
+      "type": "shell",
+      "command": "tail",
+      "args": ["-n", "200", "-f", "logs/ingest.log"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Session",
+      "type": "shell",
+      "command": "echo 'Starting session...' && /usr/bin/python3 scripts/check_continue.py && tail -n 200 -f logs/ingest.log",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "projectName",
+      "type": "promptString",
+      "description": "Enter the project name for ingest",
+      "default": "TestIngest"
+    },
+    {
+      "id": "destRoot",
+      "type": "promptString",
+      "description": "Destination root (e.g., /Volumes/NVME/ingests)",
+      "default": "/Volumes"
+    }
+  ]
+}

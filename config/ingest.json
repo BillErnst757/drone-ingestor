@@ -1,0 +1,28 @@
+{
+  "input_roots": [
+    "~/code/drone-ingestor/input"
+  ],
+  "dest_root": "~/code/drone-ingestor/output",
+  "mode": "copy",
+  "flight_gap_minutes": 10,
+  "extensions": {
+    "media": [
+      ".jpg",
+      ".jpeg",
+      ".dng",
+      ".mp4",
+      ".mov",
+      ".lrf"
+    ],
+    "telemetry": [
+      ".srt",
+      ".dat",
+      ".txt",
+      ".bin"
+    ],
+    "misc": [
+      ".db",
+      ".tmp"
+    ]
+  }
+}

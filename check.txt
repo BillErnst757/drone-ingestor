@@ -1,0 +1,1 @@
+Bernard is live inside VS Code!
