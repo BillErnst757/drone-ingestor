@@ -61,9 +61,19 @@ Follow these guardrails and workflows to keep ingest runs reproducible.
 - Run outputs: `output/<timestamp>_<Project>/`  
 - Manifests: `manifest.json` + `checksums.txt` (sha256)  
 
+
 ---
 
-## 5. Development & Release
+## 5. Resolve-Friendly Output
+- Ingest runs now default to a Resolve-ready layout under `media/`, `telemetry/`, and `misc/`.
+- A CSV summary (`resolve_manifest.csv`) lists clip paths for quick import into Resolve.
+- Checksums and `manifest.json` still document every copied file.
+
+---
+
+---
+
+## 6. Development & Release
 - Branches: `feat/*`, `fix/*`  
 - Commits: imperative style, e.g. `fix(ingest): improve DRONE_SD detection`  
 - Do not commit: API keys or `/output/` artifacts

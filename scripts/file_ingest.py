@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, json, shutil, hashlib, time
+import os, sys, json, shutil, hashlib, time, csv
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
@@ -209,8 +209,18 @@ def run_ingest(project_name, mode, gap, device_override=None, dest_root: Path = 
 
     now_local = datetime.now()
     run_dir = dest_root / (now_local.strftime("%Y-%m-%d_%H%M%S") + f"_{project_name}")
-    flights_dir = run_dir / "flights"
     run_dir.mkdir(parents=True, exist_ok=True)
+
+    media_root = run_dir / "media"
+    telemetry_root = run_dir / "telemetry"
+    misc_root = run_dir / "misc"
+    summary_path = run_dir / "resolve_manifest.csv"
+
+    bucket_root_map = {
+        "media": media_root,
+        "telemetry": telemetry_root,
+        "misc": misc_root,
+    }
 
     manifest = {
         "run": {
@@ -218,6 +228,7 @@ def run_ingest(project_name, mode, gap, device_override=None, dest_root: Path = 
             "project_name": project_name,
             "mode": mode,
             "dest_root": str(dest_root),
+            "layout": "resolve",
             "flight_gap_minutes": gap,
         },
         "flights": []
@@ -227,31 +238,50 @@ def run_ingest(project_name, mode, gap, device_override=None, dest_root: Path = 
     counter = {"done": 0, "total": total_files, "last_time": time.time()}
 
     checksums_path = run_dir / "checksums.txt"
-    with open(checksums_path, "a", encoding="utf-8") as chksum_fh:
+    with open(checksums_path, "a", encoding="utf-8") as chksum_fh, \
+         open(summary_path, "w", encoding="utf-8", newline="") as summary_fh:
+        summary_writer = csv.writer(summary_fh)
+        summary_writer.writerow(["flight_id", "device", "bucket", "dest_rel", "timestamp", "source"])
+
         for i, cluster in enumerate(clusters, start=1):
             fid = f"flight_{i:03d}"
-            fdir = flights_dir / fid
             moved = []
             for r in cluster:
-                dst = fdir / r["device"] / r["bucket"] / r["path"].name
+                bucket_root = bucket_root_map.get(r["bucket"], misc_root) / r["device"]
+                dst = bucket_root / r["path"].name
                 copy_or_move(r["path"], dst, mode, counter, checksums_fh=chksum_fh)
-                moved.append({
+                dest_rel = str(dst.relative_to(run_dir))
+                entry = {
                     "device": r["device"],
                     "bucket": r["bucket"],
                     "src": str(r["path"]),
                     "dst": str(dst),
+                    "dest_rel": dest_rel,
                     "timestamp": r["timestamp"].isoformat()
-                })
+                }
+                moved.append(entry)
+                summary_writer.writerow([fid, entry["device"], entry["bucket"], entry["dest_rel"], entry["timestamp"], entry["src"]])
             manifest["flights"].append({
                 "flight_id": fid,
                 "mode": "telemetry_anchored" if any(r["bucket"] == "telemetry" for r in cluster) else "media_only",
                 "start": min(x["timestamp"] for x in cluster).isoformat(),
                 "end":   max(x["timestamp"] for x in cluster).isoformat(),
                 "count": len(cluster),
-                "files": moved
+                "files": [
+                    {
+                        "device": entry["device"],
+                        "bucket": entry["bucket"],
+                        "src": entry["src"],
+                        "dst": entry["dst"],
+                        "dest_rel": entry["dest_rel"],
+                        "timestamp": entry["timestamp"],
+                    }
+                    for entry in moved
+                ]
             })
 
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    print(f"[INFO] Resolve manifest CSV: {summary_path}")
     with (LOGS / "ingest.log").open("a") as lf:
         lf.write(f'{now_local.isoformat()} | run={run_dir.name} flights={len(manifest["flights"])} files={sum(f["count"] for f in manifest["flights"])}\n')
 
