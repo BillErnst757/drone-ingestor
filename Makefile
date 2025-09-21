@@ -1,6 +1,6 @@
 PY := /usr/bin/python3
 
-.PHONY: detect ingest gui gui_hb logs clean verify
+.PHONY: detect ingest gui gui_hb gui_qt logs clean verify
 
 detect:
 	$(PY) scripts/file_ingest.py --test
@@ -14,6 +14,10 @@ gui:
 
 gui_hb:
 	/opt/homebrew/bin/python3 scripts/ingest_gui.py
+
+
+gui_qt:
+	$(PY) scripts/ingest_gui_qt.py
 
 logs:
 	tail -n 200 -f logs/ingest.log

@@ -86,7 +86,8 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 ## 9. Standard Commands
 `make detect` → dry-run card detection  
 `make ingest PROJECT=MyProject` → full ingest  
-`make gui` → launch GUI ingestor  
+`make gui` → launch legacy Tk GUI ingestor  
+`make gui_qt` → launch PySide6 GUI ingestor  
 `make logs` → tail `logs/ingest.log`
 
 ====

@@ -39,7 +39,8 @@ Follow these guardrails and workflows to keep ingest runs reproducible.
 - **Makefile** (canonical commands):
   - `make detect` → dry-run card detection
   - `make ingest PROJECT=Name` → full ingest
-  - `make gui` → launch GUI ingest
+  - `make gui` → launch legacy Tk GUI
+  - `make gui_qt` → launch PySide6 GUI ingest
   - `make logs` → tail logs
 
 - **.vscode/tasks.json** (GUI mirror of Makefile).
