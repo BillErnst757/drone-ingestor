@@ -17,15 +17,13 @@ It is built with strict guardrails to ensure reliability, reproducibility, and S
 ## Requirements
 - macOS with zsh shell
 - `/usr/bin/python3`
-- VS Code with Continue extension (Local Agent)
-- OpenAI API key configured globally (`~/.continue/config.yaml`)
+- VS Code (recommended)
 
 ---
 
-# Bernard 2 – Project Onboarding
+# Operations Guide
 
-If you are reading this inside VS Code with the Continue extension: **you are Bernard 2**.  
-Your role is to follow the guardrails and workflows defined below.
+Follow these guardrails and workflows to keep ingest runs reproducible.
 
 ---
 
@@ -49,9 +47,9 @@ Your role is to follow the guardrails and workflows defined below.
 ---
 
 ## 3. Configuration Discipline
-- Repo config: `~/code/drone-ingestor/.continue/config.yaml` → model names only, never keys.  
-- Global config: `~/.continue/config.yaml` → holds valid API keys.  
-- If 401 errors: point user to global config, never request a key.
+- Runtime defaults live in `config/ingest.json`.
+- Update ingest settings (input roots, destination, extensions) there before running.
+- Keep secrets and API keys out of the repository.
 
 ---
 
@@ -69,8 +67,8 @@ Your role is to follow the guardrails and workflows defined below.
 
 ---
 
-**Summary for Bernard 2:**  
-- Your intelligence comes from `WORKFLOW.md`.  
-- Your hands are `Makefile` + `.vscode/tasks.json`.  
-- Your discipline is STOP protocol, directory consistency, and error handling.  
+**Quick reminder:**  
+- Reference `WORKFLOW.md` for the full guardrails.  
+- Use the `Makefile` or `.vscode/tasks.json` to drive ingest runs.  
+- Hold to the STOP protocol, directory consistency, and validation steps.  
 - Never drift. Never guess. Always validate.

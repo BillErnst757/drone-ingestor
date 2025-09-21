@@ -9,7 +9,7 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 - **Interpreter:** Always use `/usr/bin/python3` until explicitly changed.
 - **Project Root:** Always work inside `~/code/drone-ingestor/`.
 - **Command Rule:** Every command must match the actual working directory (`pwd`).
-- **Editor:** VS Code with the Continue extension (Local Agent).
+- **Editor:** VS Code recommended (any editor is fine).
 - **System:** macOS + zsh assumed.
 
 ====
@@ -51,27 +51,17 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 
 ====
 
-## 5. Tooling (Continue / “Bernard 2”)
-- **Config locations**
-  - **Repo (no secrets):** `~/code/drone-ingestor/.continue/config.yaml`
-  - **Global (keys live here):** `~/.continue/config.yaml`
-- **Repo config** defines model names only; **never** API keys.
-- **Global config** holds keys. Minimal example:
-
-models:
-  - name: GPT-5
-    provider: openai
-    model: gpt-5
-    apiKey: sk-…project-key…
-
-- **If errors persist:** Ensure both files exist as above and restart VS Code.
+## 5. Tooling
+- Prefer the provided `Makefile` targets for common operations.
+- `.vscode/tasks.json` mirrors those commands for GUI-driven workflows.
+- Custom automation scripts belong under `scripts/`.
 
 ====
 
 ## 6. Error Handling
 - **No cards:** Print “No recognizable DJI cards detected.” and list `/Volumes/*`.
 - **No staged input:** Print “No staged files under input/.” and suggest exact `cp/rsync`.
-- **401 (auth):** Do not request keys in chat; point to **global** config and restart VS Code.
+- **Auth errors:** Document the message, avoid asking for secrets, and escalate to the operator.
 
 ====
 
@@ -101,7 +91,7 @@ models:
 
 ====
 
-## 10. Collaboration Etiquette (Bernard 2)
+## 10. Collaboration Etiquette
 - Do **not** re-issue completed steps.
 - **State echo:** Start each turn with a one-line context summary.
 - **No secrets** in repo outputs.
@@ -118,15 +108,14 @@ models:
 
 ## 12. Quick Session Checklist
 - [ ] `pwd` → `~/code/drone-ingestor/`
-- [ ] `.continue/config.yaml` present (no keys)
-- [ ] `~/.continue/config.yaml` present (with key)
-- [ ] `/usr/bin/python3 -m pip show openai httpx` succeeds
+- [ ] `/usr/bin/python3 --version` reports the expected interpreter
+- [ ] `logs/` and `output/` directories exist (create if missing)
 - [ ] `make detect` lists cards or says none found
 - [ ] `make ingest PROJECT=TestIngest` shows progress + writes manifest
 
 ====
 
 ## 13. Known Gotchas
-- **Invalid API key:** Key must be global-only. Restart VS Code after edits.
+- **tkinter missing:** Install Homebrew Python (`brew install python-tk`) for GUI runs.
 - **Blank GUI:** Run `scripts/ingest_gui.py` directly; verify Tk.
 - **Copy stalls:** Use `iostat 2`; safe to Ctrl-C and rerun.

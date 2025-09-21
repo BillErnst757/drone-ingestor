@@ -19,8 +19,7 @@ logs:
 	tail -n 200 -f logs/ingest.log
 
 verify:
-	$(PY) -m pip show openai httpx || true
-	$(PY) scripts/check_continue.py || true
+	$(PY) scripts/access_test.py || true
 
 clean:
 	rm -rf output/* logs/* || true
