@@ -11,7 +11,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-from PySide6.QtCore import QProcess, Qt, QTimer
+from PySide6.QtCore import QProcess, Qt, QTimer, QProcessEnvironment
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QWidget,
     QGridLayout,
+    QFileDialog,
 )
 from typing import Optional, List
 
@@ -45,6 +46,7 @@ class IngestWindow(QMainWindow):
 
         self.python_exe = python_exe
         self.process: Optional[QProcess] = None
+        self.user_stopped = False
         self.total_files = 0
         self.done_files = 0
 
@@ -62,37 +64,50 @@ class IngestWindow(QMainWindow):
         layout.addWidget(name_label, 0, 0)
         layout.addWidget(self.project_edit, 0, 1, 1, 2)
 
+        dest_label = QLabel("Destination:")
+        self.dest_edit = QLineEdit()
+        default_dest = str(ROOT / "output")
+        self.dest_edit.setPlaceholderText(default_dest)
+        self.dest_edit.setText(default_dest)
+        layout.addWidget(dest_label, 0, 3)
+        layout.addWidget(self.dest_edit, 0, 4)
+
+        self.browse_button = QPushButton("Browse…")
+        self.browse_button.clicked.connect(self.choose_destination)
+        layout.addWidget(self.browse_button, 0, 5)
+
         self.detect_button = QPushButton("Detect Cards")
         self.detect_button.clicked.connect(self.detect_cards)
-        layout.addWidget(self.detect_button, 0, 3)
+        layout.addWidget(self.detect_button, 1, 0)
 
         self.start_button = QPushButton("Start Ingest")
         self.start_button.clicked.connect(self.start_ingest)
-        layout.addWidget(self.start_button, 0, 4)
+        layout.addWidget(self.start_button, 1, 1)
 
         self.stop_button = QPushButton("Stop")
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_ingest)
-        layout.addWidget(self.stop_button, 0, 5)
+        layout.addWidget(self.stop_button, 1, 2)
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
-        layout.addWidget(self.progress_bar, 1, 0, 1, 4)
+        layout.addWidget(self.progress_bar, 2, 0, 1, 4)
 
         self.progress_label = QLabel("0 / 0")
-        layout.addWidget(self.progress_label, 1, 4, 1, 2)
+        layout.addWidget(self.progress_label, 2, 4, 1, 2)
 
         status_title = QLabel("Status:")
-        layout.addWidget(status_title, 2, 0)
+        layout.addWidget(status_title, 3, 0)
         self.status_label = QLabel("Idle.")
-        layout.addWidget(self.status_label, 2, 1, 1, 5)
+        layout.addWidget(self.status_label, 3, 1, 1, 5)
 
         self.log_view = QPlainTextEdit()
         self.log_view.setReadOnly(True)
-        layout.addWidget(self.log_view, 3, 0, 1, 6)
+        layout.addWidget(self.log_view, 4, 0, 1, 6)
 
-        layout.setRowStretch(3, 1)
+        layout.setRowStretch(4, 1)
         layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(4, 1)
 
         self.setCentralWidget(central)
 
@@ -111,10 +126,16 @@ class IngestWindow(QMainWindow):
         self.detect_button.setEnabled(not running)
         self.stop_button.setEnabled(running)
         self.project_edit.setEnabled(not running)
+        self.dest_edit.setEnabled(not running)
+        self.browse_button.setEnabled(not running)
 
     def current_project(self) -> str:
         text = self.project_edit.text().strip()
         return text or "Ingest"
+
+    def current_destination(self) -> str:
+        text = self.dest_edit.text().strip()
+        return text or str(ROOT / "output")
 
     # --- card detection ----------------------------------------------
     def detect_cards(self):
@@ -161,7 +182,8 @@ class IngestWindow(QMainWindow):
             QMessageBox.critical(self, "Missing Script", f"Cannot find ingest script:\n{SCRIPT}")
             return
 
-        cmd = [self.python_exe, str(SCRIPT), "--project-name", self.current_project()]
+        dest = self.current_destination()
+        cmd = [self.python_exe, str(SCRIPT), "--project-name", self.current_project(), "--dest", dest]
         self.append_log("$ " + " ".join(cmd))
         self.set_status("Ingest running…")
         self.progress_bar.setValue(0)
@@ -171,13 +193,17 @@ class IngestWindow(QMainWindow):
 
         self.process = QProcess(self)
         self.process.setProgram(self.python_exe)
-        self.process.setArguments([str(SCRIPT), "--project-name", self.current_project()])
+        self.process.setArguments([str(SCRIPT), "--project-name", self.current_project(), "--dest", dest])
         self.process.setWorkingDirectory(str(ROOT))
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("PYTHONUNBUFFERED", "1")
+        self.process.setProcessEnvironment(env)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
         self.process.readyReadStandardOutput.connect(self._read_output)
         self.process.finished.connect(self._finished)
         self.process.errorOccurred.connect(self._error)
 
+        self.user_stopped = False
         self.process.start()
         self.set_running(True)
         if not self.process.waitForStarted(3000):
@@ -188,6 +214,7 @@ class IngestWindow(QMainWindow):
     def stop_ingest(self):
         if not self.process or self.process.state() == QProcess.NotRunning:
             return
+        self.user_stopped = True
         self.append_log("[INFO] Terminating ingest…")
         self.process.terminate()
         if not self.process.waitForFinished(2000):
@@ -225,17 +252,29 @@ class IngestWindow(QMainWindow):
 
     def _finished(self, code: int, status):  # status is QProcess.ExitStatus
         self.set_running(False)
+        stopped = self.user_stopped
+        self.user_stopped = False
         self.process = None
-        if code == 0:
-            self.set_status("Ingest finished successfully.")
+        if code == 0 or stopped:
+            self.set_status("Ingest finished successfully." if code == 0 else "Stopped by user.")
         else:
             self.set_status(f"Ingest exited with code {code}.")
 
     def _error(self, error):  # error is QProcess.ProcessError
+        if self.user_stopped and error == QProcess.ProcessError.Crashed:
+            self.append_log("[INFO] Process terminated after user request.")
+            self.user_stopped = False
+            return
         self.append_log(f"[ERROR] Process error: {error}")
         self.set_status("Process error (see log).")
         self.set_running(False)
         self.process = None
+
+    def choose_destination(self):
+        start_dir = self.dest_edit.text().strip() or str(ROOT)
+        chosen = QFileDialog.getExistingDirectory(self, "Select Destination", start_dir)
+        if chosen:
+            self.dest_edit.setText(chosen)
 
 
 def run_check(python_exe: str) -> int:

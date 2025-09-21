@@ -87,7 +87,7 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 `make detect` → dry-run card detection  
 `make ingest PROJECT=MyProject` → full ingest  
 `make gui` → launch legacy Tk GUI ingestor  
-`make gui_qt` → launch PySide6 GUI ingestor  
+`make gui_qt` → launch PySide6 GUI ingestor (choose project + destination)  
 `make logs` → tail `logs/ingest.log`
 
 ====

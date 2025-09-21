@@ -40,10 +40,12 @@ Follow these guardrails and workflows to keep ingest runs reproducible.
   - `make detect` → dry-run card detection
   - `make ingest PROJECT=Name` → full ingest
   - `make gui` → launch legacy Tk GUI
-  - `make gui_qt` → launch PySide6 GUI ingest
+  - `make gui_qt` → launch PySide6 GUI ingest (project + destination picker)
   - `make logs` → tail logs
 
 - **.vscode/tasks.json** (GUI mirror of Makefile).
+
+- PySide6 GUI defaults to `output/` but you can browse to any destination before starting ingest.
 
 ---
 
