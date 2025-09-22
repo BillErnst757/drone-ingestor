@@ -118,6 +118,6 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 ====
 
 ## 13. Known Gotchas
-- **tkinter missing:** Install Homebrew Python (`brew install python-tk`) for GUI runs.
-- **Blank GUI:** Run `scripts/ingest_gui.py` directly; verify Tk.
+- **PySide6 missing:** `python3 -m pip install --user PySide6` and rerun `make gui`.
+- **GUI won’t launch:** Run `make gui -- --check` to verify environment paths.
 - **Copy stalls:** Use `iostat 2`; safe to Ctrl-C and rerun.
