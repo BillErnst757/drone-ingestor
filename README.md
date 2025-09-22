@@ -65,7 +65,7 @@ Follow these guardrails and workflows to keep ingest runs reproducible.
 ---
 
 ## 5. Resolve-Friendly Output
-- Ingest runs now default to a Resolve-ready layout under `media/`, `telemetry/`, and `misc/`.
+- Ingest runs now default to a Resolve-ready layout under `media/`, `proxies/`, `telemetry/`, and `misc/`.
 - A CSV summary (`resolve_manifest.csv`) lists clip paths for quick import into Resolve.
 - Checksums and `manifest.json` still document every copied file.
 

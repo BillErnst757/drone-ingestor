@@ -78,7 +78,7 @@ It is adapted from the **Deep Thinking Protocol** and refined to ensure consiste
 ## 8. Logging & Session Records
 - **Console log** mirrored to `logs/ingest.log`.
 - **Run manifest** at `output/<timestamp>_<project>/manifest.json`.
-- **Resolve CSV**: `resolve_manifest.csv` summarises clips for DaVinci Resolve.
+- **Resolve CSV**: `resolve_manifest.csv` summarises clips for DaVinci Resolve (media + proxies).
 - **Checksums**: `checksums.txt` (sha256) for copied files.
 - **Idempotent:** Safe to rerun; skip by size+hash.
 

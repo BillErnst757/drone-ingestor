@@ -13,7 +13,8 @@ SIGNATURES = {
     "RC2": ["Android", "Notifications", "Ringtones"]
 }
 
-MEDIA_EXT = {".jpg", ".jpeg", ".dng", ".mp4", ".mov", ".lrf"}
+MEDIA_EXT = {".jpg", ".jpeg", ".dng", ".mp4", ".mov"}
+PROXY_EXT = {".lrf"}
 TELEM_EXT = {".srt", ".dat", ".txt", ".bin"}
 
 class Tee:
@@ -82,6 +83,7 @@ def should_skip(src: Path, dst: Path) -> bool:
 def classify_bucket(p: Path) -> str:
     ext = p.suffix.lower()
     if ext in MEDIA_EXT: return "media"
+    if ext in PROXY_EXT: return "proxies"
     if ext in TELEM_EXT: return "telemetry"
     return "misc"
 
@@ -107,10 +109,14 @@ def gather_files(root: Path):
     all_files = []
     for base, _, files in os.walk(root):
         for name in files:
+            if name.startswith("._"):
+                continue
             full = Path(base) / name
             try:
-                if full.is_file(): all_files.append(full)
-            except Exception: continue
+                if full.is_file():
+                    all_files.append(full)
+            except Exception:
+                continue
     return all_files
 
 def cluster_by_time(records, gap_minutes):
@@ -128,6 +134,11 @@ def cluster_by_time(records, gap_minutes):
 
 def copy_or_move(src: Path, dst: Path, mode: str, counter: dict, checksums_fh=None):
     dst.parent.mkdir(parents=True, exist_ok=True)
+
+    if not src.exists():
+        print(f"[WARN] Missing source, skipping: {src}")
+        counter["done"] += 1
+        return
 
     if should_skip(src, dst):
         print(f"[INFO] Skip (exists, same size+hash): {dst}")
@@ -212,12 +223,14 @@ def run_ingest(project_name, mode, gap, device_override=None, dest_root: Path = 
     run_dir.mkdir(parents=True, exist_ok=True)
 
     media_root = run_dir / "media"
+    proxy_root = run_dir / "proxies"
     telemetry_root = run_dir / "telemetry"
     misc_root = run_dir / "misc"
     summary_path = run_dir / "resolve_manifest.csv"
 
     bucket_root_map = {
         "media": media_root,
+        "proxies": proxy_root,
         "telemetry": telemetry_root,
         "misc": misc_root,
     }
