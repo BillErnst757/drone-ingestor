@@ -1,86 +1,40 @@
-# Drone Ingestor Project
+# Repository Overview
 
-This project provides tools for ingesting media and metadata from DJI drone SD cards, goggles, and controllers into a structured archive.  
-It is built with strict guardrails to ensure reliability, reproducibility, and STOP-compliance.
+This repository now serves two purposes:
 
----
+1. Preserve the original intent of the **Drone Ingestor** concept.
+2. Host the active **Rope Letter Planner** project that lives in `rope-letter-planner/`.
 
-## Features
-- Automatic detection of DJI card types (DRONE_SD, GOGGLES3, RC2).
-- Hybrid ingest: media + metadata (`.SRT`, `.LRF`, `.LRV`, `FC*.db`).
-- Progress logging every 10 files or 10 seconds.
-- Manifest output with checksums for reproducibility.
-- GUI and CLI ingest options.
+All legacy ingest code and tooling have been removed to keep the workspace lean while still documenting what the drone project set out to accomplish.
 
 ---
 
-## Requirements
-- macOS with zsh shell
-- `/usr/bin/python3`
-- VS Code (recommended)
+## Drone Ingestor (Archived Intent Only)
+
+The ingest idea focused on safely copying DJI drone, goggles, and controller media into a reproducible archive. The high-level requirements we are keeping for reference:
+
+- Detect card types (DRONE_SD, GOGGLES3, RC2) automatically.
+- Copy media *and* metadata (`.SRT`, `.LRF`, `.LRV`, `FC*.db`) while logging progress.
+- Produce manifests and checksums suitable for DaVinci Resolve workflows.
+- Offer either a GUI or CLI entry point with strict STOP/validation guardrails.
+
+If the ingest effort is revived in the future, these bullets describe the scope without dragging along the old implementation.
 
 ---
 
-# Operations Guide
+## Rope Letter Planner
 
-Follow these guardrails and workflows to keep ingest runs reproducible.
+The active project now is a lightweight app for planning rope letters (see `rope-letter-planner/`). To work on it:
 
----
+1. Open the folder in VS Code (`File → Open Folder… → rope-letter-planner`).
+2. Use a simple static-server or the VS Code Live Preview extension to view `index.html`.
+3. Update `app.js`, `styles.css`, or assets as needed; changes sync automatically if the folder lives in Google Drive or another synced location.
 
-## 1. Guardrails (see WORKFLOW.md for full detail)
-- **STOP Protocol:** If user types STOP → acknowledge, halt, and wait.  
-- **Environment:** Work only inside `~/code/drone-ingestor/` with `/usr/bin/python3`.  
-- **Validation:** Always confirm `pwd`, paths, and tool availability before proposing commands.  
-- **Etiquette:** No secrets, no duplicate steps, one exact command per action.
+`rope-letter-planner/` is self-contained (HTML/JS/CSS). No build tooling is required.
 
 ---
 
-## 2. Entry Points
-- **Makefile** (canonical commands):
-  - `make detect` → dry-run card detection
-  - `make ingest PROJECT=Name` → full ingest
-  - `make gui` (or `make gui_qt`) → launch the PySide6 GUI ingest
-  - `make logs` → tail logs
+## Next Steps
 
-- **.vscode/tasks.json** (GUI mirror of Makefile).
-
-- PySide6 GUI defaults to `output/` but you can browse to any destination before starting ingest.
-
----
-
-## 3. Configuration Discipline
-- Runtime defaults live in `config/ingest.json`.
-- Update ingest settings (input roots, destination, extensions) there before running.
-- Keep secrets and API keys out of the repository.
-
----
-
-## 4. Logging & Outputs
-- Logs: `logs/ingest.log`  
-- Run outputs: `output/<timestamp>_<Project>/`  
-- Manifests: `manifest.json` + `checksums.txt` (sha256)  
-
-
----
-
-## 5. Resolve-Friendly Output
-- Ingest runs now default to a Resolve-ready layout under `media/`, `proxies/`, `telemetry/`, and `misc/`.
-- A CSV summary (`resolve_manifest.csv`) lists clip paths for quick import into Resolve.
-- Checksums and `manifest.json` still document every copied file.
-
----
-
----
-
-## 6. Development & Release
-- Branches: `feat/*`, `fix/*`  
-- Commits: imperative style, e.g. `fix(ingest): improve DRONE_SD detection`  
-- Do not commit: API keys or `/output/` artifacts
-
----
-
-**Quick reminder:**  
-- Reference `WORKFLOW.md` for the full guardrails.  
-- Use the `Makefile` or `.vscode/tasks.json` to drive ingest runs.  
-- Hold to the STOP protocol, directory consistency, and validation steps.  
-- Never drift. Never guess. Always validate.
+- If you need Drive syncing, open the Google Drive-backed folder directly in VS Code.
+- Should the Drone Ingestor effort restart, reintroduce code under a new subdirectory while keeping this README as the intent document.
