@@ -1,0 +1,12 @@
+{
+  "name": "rope-letter-planner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive planner for DIN-style rope lettering layouts.",
+  "scripts": {
+    "dev": "http-server -p 4173 -c-1 -d false"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

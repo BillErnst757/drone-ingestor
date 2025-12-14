@@ -100,7 +100,16 @@
 
         <fieldset>
           <legend>Font</legend>
-          <p class="hint">Load a DIN 1451 compatible <code>.ttf</code> file to start planning.</p>
+          <p class="hint">Start with the bundled DIN variant or load your own <code>.ttf</code>/<code>.otf</code> file.</p>
+          <label>
+            Built-in font
+            <select id="builtinFontSelect">
+              <option value="din-alt-bold" selected>DIN Alternate Bold</option>
+              <option value="just-sans-outline">JUST Sans Outline ExtraBold</option>
+              <option value="raela-grotesque">Raela Grotesque ExtraBold</option>
+              <option value="custom-upload">Custom upload…</option>
+            </select>
+          </label>
           <label class="file-label">
             <span>Upload font</span>
             <input type="file" id="fontInput" accept=".ttf,.otf">
@@ -108,7 +117,7 @@
           <div id="fontDropZone" class="drop-zone" tabindex="0" role="button" aria-label="Drop DIN font file">
             <span>…or drag &amp; drop a DIN 1451 font here</span>
           </div>
-          <p id="fontStatus" class="status status-warn">No font loaded.</p>
+          <p id="fontStatus" class="status status-warn">Loading bundled font…</p>
         </fieldset>
       </form>
     </section>
@@ -118,7 +127,7 @@
         <div class="canvas-viewport" id="canvasViewport">
           <canvas id="plannerCanvas" width="768" height="960"></canvas>
         </div>
-        <div class="canvas-overlay" id="canvasMessage">Load a DIN 1451 font to begin.</div>
+        <div class="canvas-overlay" id="canvasMessage">Loading bundled font…</div>
       </div>
       <aside class="legend">
         <h2>Legend</h2>
@@ -172,7 +181,7 @@
   </main>
 
   <footer>
-    <p>Powered by opentype.js. Bring your own DIN 1451 font file.</p>
+    <p>Powered by opentype.js. DIN Alternate Bold ships bundled, but you can still bring your own DIN 1451 font file.</p>
   </footer>
 
   <script src="vendor/opentype.min.js"></script>

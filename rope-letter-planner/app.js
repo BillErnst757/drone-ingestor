@@ -13,6 +13,21 @@ const THEME_STORAGE_KEY = "ropePlannerTheme";
 const DEFAULT_THEME = "dark";
 const initialTheme = loadStoredTheme();
 
+const BUILT_IN_FONTS = {
+  "din-alt-bold": {
+    label: "DIN Alternate Bold",
+    path: "assets/fonts/DIN-Alternate-Bold.ttf",
+  },
+  "just-sans-outline": {
+    label: "JUST Sans Outline ExtraBold",
+    path: "assets/fonts/JUST-Sans-Outline-ExtraBold.otf",
+  },
+  "raela-grotesque": {
+    label: "Raela Grotesque ExtraBold",
+    path: "assets/fonts/RaelaGrotesque-ExtraBold.ttf",
+  },
+};
+
 const canvas = document.getElementById("plannerCanvas");
 const ctx = canvas.getContext("2d");
 let DEVICE_PIXEL_RATIO = window.devicePixelRatio || 1;
@@ -34,6 +49,7 @@ const controls = {
   keepInBounds: document.getElementById("keepInBoundsToggle"),
   strictManualToggle: document.getElementById("strictManualToggle"),
   font: document.getElementById("fontInput"),
+  builtinFontSelect: document.getElementById("builtinFontSelect"),
   fontStatus: document.getElementById("fontStatus"),
   fontDropZone: document.getElementById("fontDropZone"),
   themeToggle: document.getElementById("themeToggle"),
@@ -75,6 +91,8 @@ const state = {
   showGrid: controls.showGrid.checked,
   theme: initialTheme,
   manualOffset: { x: 0, y: 0 },
+  selectedBuiltinFont: controls.builtinFontSelect?.value || "din-alt-bold",
+  fontSource: "builtin",
   zoom: 1,
   keepInBounds: controls.keepInBounds ? controls.keepInBounds.checked : true,
   strictManual: controls.strictManualToggle ? controls.strictManualToggle.checked : false,
@@ -94,7 +112,11 @@ function init() {
   updateZoomReadout();
   updateCursorReadout();
   updatePointList();
-  updateOverlay("Load a DIN 1451 font to begin.");
+  if (state.selectedBuiltinFont && BUILT_IN_FONTS[state.selectedBuiltinFont]) {
+    loadBuiltinFont(state.selectedBuiltinFont);
+  } else {
+    updateOverlay("Select or upload a DIN 1451 font to begin.");
+  }
   render();
   centerViewportOnCanvas();
 }
@@ -202,6 +224,21 @@ function attachListeners() {
   }
 
   controls.font.addEventListener("change", handleFontLoad);
+  if (controls.builtinFontSelect) {
+    controls.builtinFontSelect.addEventListener("change", (event) => {
+      const key = event.target.value;
+      if (key === "custom-upload") {
+        controls.font?.click();
+        controls.builtinFontSelect.value = state.selectedBuiltinFont || "din-alt-bold";
+        return;
+      }
+      if (!BUILT_IN_FONTS[key]) {
+        return;
+      }
+      state.selectedBuiltinFont = key;
+      loadBuiltinFont(key);
+    });
+  }
   attachDropZoneHandlers();
 
   if (controls.themeToggle) {
@@ -383,6 +420,65 @@ function handleFontLoad(event) {
   loadFontFile(file);
 }
 
+function applyLoadedFont(font, displayName, { bundled = false } = {}) {
+  state.font = font;
+  state.fontName = displayName;
+  state.plan = null;
+  state.fontSource = bundled ? "builtin" : "custom";
+  if (controls.builtinFontSelect) {
+    if (bundled) {
+      controls.builtinFontSelect.value = state.selectedBuiltinFont || controls.builtinFontSelect.value || "din-alt-bold";
+    } else {
+      controls.builtinFontSelect.value = "custom-upload";
+    }
+  }
+  controls.fontStatus.textContent = bundled ? `Loaded ${displayName} (bundled)` : `Loaded ${displayName}`;
+  controls.fontStatus.classList.remove("status-warn");
+  controls.fontStatus.classList.add("status-ok");
+  updateOverlay(state.text ? "" : "Enter text to plan rope layout.");
+  resetManualOffset();
+  recalc();
+}
+
+async function loadBuiltinFont(fontKey) {
+  const fontInfo = BUILT_IN_FONTS[fontKey];
+  if (!fontInfo) {
+    updateOverlay("Select a valid bundled font or upload your own.");
+    return;
+  }
+  state.selectedBuiltinFont = fontKey;
+  if (!opentypeLib) {
+    controls.fontStatus.textContent = "Font engine not loaded. Refresh and try again.";
+    controls.fontStatus.classList.remove("status-ok");
+    controls.fontStatus.classList.add("status-warn");
+    updateOverlay("Font engine not available. Check script load order.");
+    return;
+  }
+
+  try {
+    controls.fontStatus.textContent = `Loading ${fontInfo.label}…`;
+    controls.fontStatus.classList.remove("status-ok");
+    controls.fontStatus.classList.remove("status-warn");
+    updateOverlay(`Loading ${fontInfo.label}…`);
+    const response = await fetch(fontInfo.path);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const fontBuffer = await response.arrayBuffer();
+    const font = opentypeLib.parse(fontBuffer);
+    applyLoadedFont(font, fontInfo.label, { bundled: true });
+  } catch (error) {
+    console.error("Failed to load bundled font", error);
+    state.font = null;
+    state.plan = null;
+    controls.fontStatus.textContent = "Bundled font unavailable. Use Upload font.";
+    controls.fontStatus.classList.remove("status-ok");
+    controls.fontStatus.classList.add("status-warn");
+    updateOverlay("Bundled font unavailable. Upload a DIN 1451 font to continue.");
+    render();
+  }
+}
+
 function loadFontFile(file) {
   if (!file) return;
 
@@ -412,14 +508,7 @@ function loadFontFile(file) {
     try {
       const fontBuffer = ev.target.result;
       const font = opentypeLib.parse(fontBuffer);
-      state.font = font;
-      state.fontName = file.name;
-      controls.fontStatus.textContent = `Loaded ${file.name}`;
-      controls.fontStatus.classList.remove("status-warn");
-      controls.fontStatus.classList.add("status-ok");
-      updateOverlay(state.text ? "" : "Enter text to plan rope layout.");
-      resetManualOffset();
-      recalc();
+      applyLoadedFont(font, file.name, { bundled: false });
     } catch (error) {
       console.error("Failed to load font", error);
       state.font = null;
@@ -508,7 +597,7 @@ function attachDropZoneHandlers() {
 function recalc() {
   if (!state.font) {
     state.plan = null;
-    updateOverlay("Load a DIN 1451 font to begin.");
+    updateOverlay("Select or upload a DIN 1451 font to begin.");
     updateTotals(null);
     updateTable(null);
     render();
