@@ -1,40 +1,33 @@
-# Repository Overview
+# Drone Ingestor
 
-This repository now serves two purposes:
+This repository is back to being a clean home for the **Drone Ingestor** project. The rope planner app was moved out to its own folder.
 
-1. Preserve the original intent of the **Drone Ingestor** concept.
-2. Host the active **Rope Letter Planner** project that lives in `rope-letter-planner/`.
+## Intent (high-level)
 
-All legacy ingest code and tooling have been removed to keep the workspace lean while still documenting what the drone project set out to accomplish.
-
----
-
-## Drone Ingestor (Archived Intent Only)
-
-The ingest idea focused on safely copying DJI drone, goggles, and controller media into a reproducible archive. The high-level requirements we are keeping for reference:
+The ingest idea focuses on safely copying DJI drone, goggles, and controller media into a reproducible archive:
 
 - Detect card types (DRONE_SD, GOGGLES3, RC2) automatically.
-- Copy media *and* metadata (`.SRT`, `.LRF`, `.LRV`, `FC*.db`) while logging progress.
+- Copy media and metadata (`.SRT`, `.LRF`, `.LRV`, `FC*.db`) while logging progress.
 - Produce manifests and checksums suitable for DaVinci Resolve workflows.
 - Offer either a GUI or CLI entry point with strict STOP/validation guardrails.
 
-If the ingest effort is revived in the future, these bullets describe the scope without dragging along the old implementation.
+## Project layout
 
----
-
-## Rope Letter Planner
-
-The active project now is a lightweight app for planning rope letters (see `rope-letter-planner/`). To work on it:
-
-1. Open the folder in VS Code (`File → Open Folder… → rope-letter-planner`).
-2. Use a simple static-server or the VS Code Live Preview extension to view `index.html`.
-3. Update `app.js`, `styles.css`, or assets as needed; changes sync automatically if the folder lives in Google Drive or another synced location.
-
-`rope-letter-planner/` is self-contained (HTML/JS/CSS). No build tooling is required.
-
----
+```
+config/        Project configuration and settings
+data/
+  raw/         Source media dumps (ignored by git)
+  processed/   Cleaned/organized outputs (ignored by git)
+  reference/   Small reference files you want to keep
+docs/          Notes, docs, and specs
+logs/          Run logs (ignored by git)
+notebooks/     Jupyter notebooks and experiments
+output/        Generated artifacts (ignored by git)
+scripts/       CLI tools and helpers
+tmp/           Scratch space (ignored by git)
+```
 
 ## Next Steps
 
-- If you need Drive syncing, open the Google Drive-backed folder directly in VS Code.
-- Should the Drone Ingestor effort restart, reintroduce code under a new subdirectory while keeping this README as the intent document.
+- Add ingest scripts under `scripts/` as you revive the project.
+- Use `docs/` for workflows and checklists.

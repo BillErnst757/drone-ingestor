@@ -1,19 +1,17 @@
-# macOS
+node_modules/
+**/node_modules/
 .DS_Store
-
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.eggs/
-.venv/
-venv/
-env/
-
-# VS Code
-.vscode/*
-!.vscode/tasks.json
-
-# Project outputs (do not commit artifacts)
-output/
-logs/
+.vscode/
+.env
+.pytest_cache/
+logs/*
+output/*
+tmp/*
+data/raw/*
+data/processed/*
+*.log
+!logs/.gitkeep
+!output/.gitkeep
+!tmp/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
